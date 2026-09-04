@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ -n "${DEBUG:-}" ]]; then
+    set -x
+fi
+
+# shellcheck source=mysql-common
+source /usr/local/bin/mysql-common
+
+root_password="$1"
+host="$2"
+db="$3"
+ignore_tables="$4"
+
+ignore_args=()
+IFS=';' read -r -a patterns <<< "${ignore_tables}"
+for pattern in "${patterns[@]}"; do
+    [[ -n "${pattern}" ]] || continue
+    if [[ "${pattern}" == *'%'* ]]; then
+        pattern_sql="$(mysql_sql_string "${pattern}")"
+        mapfile -t matched_tables < <(
+            MYSQL_PWD="${root_password}" mysql \
+                --protocol=TCP \
+                --host="${host}" \
+                --user=root \
+                --batch \
+                --skip-column-names \
+                --database="${db}" \
+                --execute="SHOW TABLES LIKE '${pattern_sql}';"
+        )
+        for table in "${matched_tables[@]}"; do
+            ignore_args+=("--ignore-table=${db}.${table}")
+        done
+    else
+        ignore_args+=("--ignore-table=${db}.${pattern}")
+    fi
+done
+
+{
+    MYSQL_PWD="${root_password}" mysqldump \
+        --protocol=TCP \
+        --host="${host}" \
+        --user=root \
+        --single-transaction \
+        --set-gtid-purged=OFF \
+        --no-data \
+        --routines \
+        --triggers \
+        --events \
+        "${db}"
+    MYSQL_PWD="${root_password}" mysqldump \
+        --protocol=TCP \
+        --host="${host}" \
+        --user=root \
+        --single-transaction \
+        --set-gtid-purged=OFF \
+        --no-create-info \
+        --skip-triggers \
+        "${ignore_args[@]}" \
+        "${db}"
+} | gzip

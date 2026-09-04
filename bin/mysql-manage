@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ -n "${DEBUG:-}" ]]; then
+    set -x
+fi
+
+# shellcheck source=mysql-common
+source /usr/local/bin/mysql-common
+
+command_name="${1:-}"
+shift || true
+
+case "${command_name}" in
+    create-db)
+        name="$1"
+        charset="$2"
+        collation="$3"
+        root_password="$4"
+        host="$5"
+        name_sql="$(mysql_sql_identifier "${name}")"
+        if [[ ! "${charset}" =~ ^[A-Za-z0-9_]+$ || ! "${collation}" =~ ^[A-Za-z0-9_]+$ ]]; then
+            echo "Invalid MySQL charset or collation" >&2
+            exit 1
+        fi
+        mysql_root_query "${host}" "${root_password}" \
+            "CREATE DATABASE IF NOT EXISTS \`${name_sql}\` CHARACTER SET ${charset} COLLATE ${collation};"
+        ;;
+    drop-db)
+        name_sql="$(mysql_sql_identifier "$1")"
+        mysql_root_query "$3" "$2" "DROP DATABASE IF EXISTS \`${name_sql}\`;"
+        ;;
+    create-user)
+        username="$1"
+        password="$2"
+        root_password="$3"
+        host="$4"
+        username_sql="$(mysql_sql_string "${username}")"
+        password_sql="$(mysql_sql_string "${password}")"
+        exists="$(mysql_root_query "${host}" "${root_password}" \
+            "SELECT 1 FROM mysql.user WHERE User = '${username_sql}' AND Host = '%';")"
+        if [[ "${exists}" == "1" ]]; then
+            if MYSQL_PWD="${password}" mysql --protocol=TCP --host="${host}" \
+                --user="${username}" --execute='SELECT 1;' >/dev/null 2>&1; then
+                echo "Database user ${username} already exists with the expected credentials"
+            else
+                echo "Database user ${username} already exists with different credentials; refusing to replace it" >&2
+                exit 1
+            fi
+        else
+            mysql_root_query "${host}" "${root_password}" \
+                "CREATE USER '${username_sql}'@'%' IDENTIFIED BY '${password_sql}';"
+        fi
+        ;;
+    drop-user)
+        username_sql="$(mysql_sql_string "$1")"
+        mysql_root_query "$3" "$2" "DROP USER IF EXISTS '${username_sql}'@'%';"
+        ;;
+    grant-user-db)
+        username_sql="$(mysql_sql_string "$1")"
+        db_sql="$(mysql_sql_identifier "$2")"
+        mysql_root_query "$4" "$3" "GRANT ALL PRIVILEGES ON \`${db_sql}\`.* TO '${username_sql}'@'%';"
+        ;;
+    revoke-user-db)
+        username_sql="$(mysql_sql_string "$1")"
+        db_sql="$(mysql_sql_identifier "$2")"
+        mysql_root_query "$4" "$3" "REVOKE ALL PRIVILEGES ON \`${db_sql}\`.* FROM '${username_sql}'@'%';"
+        ;;
+    *)
+        echo "Unsupported MySQL management command: ${command_name}" >&2
+        exit 1
+        ;;
+esac

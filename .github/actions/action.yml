@@ -1,0 +1,22 @@
+name: push
+description: Combine multi-architecture images and publish release aliases
+inputs:
+  version:
+    description: MySQL version
+    required: true
+  latest:
+    description: Publish the latest alias
+    required: false
+  latest_major:
+    description: Publish the latest major-version alias
+    required: false
+runs:
+  using: composite
+  steps:
+  - name: Publish image aliases
+    env:
+      MYSQL_VER: ${{ inputs.version }}
+      LATEST: ${{ inputs.latest }}
+      LATEST_MAJOR: ${{ inputs.latest_major }}
+    run: . "${GITHUB_ACTION_PATH}/release.sh"
+    shell: bash

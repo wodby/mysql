@@ -1,2 +1,99 @@
-# mysql
-MySQL docker container image
+# MySQL Docker Container Image
+
+[![Build Status](https://github.com/wodby/mysql/actions/workflows/workflow.yml/badge.svg)](https://github.com/wodby/mysql/actions/workflows/workflow.yml)
+[![Docker Pulls](https://img.shields.io/docker/pulls/wodby/mysql.svg)](https://hub.docker.com/r/wodby/mysql)
+
+MySQL Community Server with Wodby configuration and database operations.
+
+## Docker images
+
+The image extends the Docker Official Image for MySQL instead of rebuilding the
+server. The upstream patch version is pinned in the Dockerfile and Makefile;
+Wodby's image updater detects both new patches and rebuilt upstream tags.
+
+Images are built for `linux/amd64` and `linux/arm64`.
+
+| Tag | Description |
+| --- | --- |
+| `8.0` | Latest Wodby build of the supported MySQL 8.0 patch release |
+| `8` | Latest Wodby MySQL 8 build |
+| `latest` | Latest supported Wodby MySQL build |
+| `8.0-X.Y.Z` | Immutable Wodby stability release |
+| `8-X.Y.Z` | Major-version alias for the same stability release |
+
+Use stability tags for production deployments.
+
+## Configuration
+
+The upstream MySQL entrypoint remains responsible for initializing and starting
+the database. Before it runs, the Wodby entrypoint renders
+`/etc/mysql/conf.d/zz-wodby.cnf` from environment variables.
+
+| Variable | Default |
+| --- | --- |
+| `MYSQL_BIND_ADDRESS` | `0.0.0.0` |
+| `MYSQL_CHARACTER_SET_SERVER` | `utf8mb4` |
+| `MYSQL_COLLATION_SERVER` | `utf8mb4_0900_ai_ci` |
+| `MYSQL_CLIENT_DEFAULT_CHARACTER_SET` | `utf8mb4` |
+| `MYSQL_CONNECT_TIMEOUT` | `10` |
+| `MYSQL_INNODB_BUFFER_POOL_SIZE` | `128M` |
+| `MYSQL_INNODB_FLUSH_LOG_AT_TRX_COMMIT` | `1` |
+| `MYSQL_INTERACTIVE_TIMEOUT` | `420` |
+| `MYSQL_MAX_ALLOWED_PACKET` | `256M` |
+| `MYSQL_MAX_CONNECTIONS` | `100` |
+| `MYSQL_NET_READ_TIMEOUT` | `90` |
+| `MYSQL_NET_WRITE_TIMEOUT` | `90` |
+| `MYSQL_TRANSACTION_ISOLATION` | `REPEATABLE-READ` |
+| `MYSQL_WAIT_TIMEOUT` | `420` |
+
+The standard upstream initialization variables remain available, including
+`MYSQL_ROOT_PASSWORD`, `MYSQL_ROOT_HOST`, `MYSQL_DATABASE`, `MYSQL_USER`, and
+`MYSQL_PASSWORD`.
+
+## Initialization imports
+
+Mount one SQL file or archive at `/wodby/import` when initializing a new data
+volume. Supported inputs are `.sql`, `.mysql`, `.gz`, `.tar.gz`, `.tgz`, and
+`.zip`. An archive must contain exactly one `.sql` or `.mysql` file.
+
+## Orchestration actions
+
+Run image operations through `make`:
+
+```text
+make check-ready [root_password host max_try wait_seconds delay_seconds]
+make check-live [root_password host]
+make query query="SELECT 1" [db user password host]
+make query-silent query="SELECT 1" [db user password host]
+make query-root query="SELECT 1" [db root_password host]
+make create-db name charset collation [root_password host]
+make drop-db name [root_password host]
+make create-user username password [root_password host]
+make drop-user username [root_password host]
+make grant-user-db username db [root_password host]
+make revoke-user-db username db [root_password host]
+make mysql-check [db root_password host]
+make import source [db user root_password host]
+make backup filepath [db root_password host ignore]
+make backup-stream stream_path status_path [db root_password host ignore]
+```
+
+Example:
+
+```bash
+docker run --rm \
+  --link mysql:mysql \
+  -e MYSQL_ROOT_PASSWORD=password \
+  wodby/mysql:8.0 \
+  make check-ready host=mysql max_try=30 wait_seconds=2
+```
+
+## Development
+
+```bash
+make
+make test
+```
+
+The wrapper code is licensed under GPL-2.0. MySQL Community Server and bundled
+dependencies retain their respective upstream licenses.

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+mysql_sql_identifier() {
+    local value="${1//\`/\`\`}"
+    printf '%s' "${value}"
+}
+
+mysql_sql_string() {
+    local value="${1//\\/\\\\}"
+    value="${value//\'/\'\'}"
+    printf '%s' "${value}"
+}
+
+mysql_root_query() {
+    local host="$1"
+    local root_password="$2"
+    local query="$3"
+
+    MYSQL_PWD="${root_password}" mysql \
+        --protocol=TCP \
+        --host="${host}" \
+        --user=root \
+        --batch \
+        --skip-column-names \
+        --execute="${query}"
+}

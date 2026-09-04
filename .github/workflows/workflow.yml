@@ -1,0 +1,62 @@
+name: Build docker image
+
+on:
+  pull_request:
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+
+permissions:
+  contents: read
+
+env:
+  MYSQL80: '8.0.44'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        arch:
+        - amd64
+        - arm64
+        include:
+        - arch: amd64
+          runner: ubuntu-24.04
+        - arch: arm64
+          runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+    - uses: actions/checkout@v5
+    - uses: docker/login-action@v3
+      if: github.event_name != 'pull_request'
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Build and test
+      env:
+        ARCH: ${{ matrix.arch }}
+        MYSQL_VER: ${{ env.MYSQL80 }}
+      run: |
+        make
+        make test
+        if [[ "${GITHUB_EVENT_NAME}" != pull_request ]]; then
+          make push
+        fi
+
+  publish:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v5
+    - uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    - uses: ./.github/actions
+      with:
+        version: ${{ env.MYSQL80 }}
+        latest: 'true'
+        latest_major: 'true'
