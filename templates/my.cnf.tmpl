@@ -1,0 +1,45 @@
+[client]
+default-character-set = {{ getenv "MYSQL_CLIENT_DEFAULT_CHARACTER_SET" "utf8mb4" }}
+
+[mysqldump]
+max_allowed_packet = {{ getenv "MYSQL_DUMP_MAX_ALLOWED_PACKET" "1G" }}
+
+[mysqld]
+bind-address = {{ getenv "MYSQL_BIND_ADDRESS" "0.0.0.0" }}
+character-set-server = {{ getenv "MYSQL_CHARACTER_SET_SERVER" "utf8mb4" }}
+collation-server = {{ getenv "MYSQL_COLLATION_SERVER" "utf8mb4_0900_ai_ci" }}
+connect_timeout = {{ getenv "MYSQL_CONNECT_TIMEOUT" "10" }}
+default_storage_engine = InnoDB
+innodb_buffer_pool_size = {{ getenv "MYSQL_INNODB_BUFFER_POOL_SIZE" "128M" }}
+innodb_flush_log_at_trx_commit = {{ getenv "MYSQL_INNODB_FLUSH_LOG_AT_TRX_COMMIT" "1" }}
+interactive_timeout = {{ getenv "MYSQL_INTERACTIVE_TIMEOUT" "420" }}
+max_allowed_packet = {{ getenv "MYSQL_MAX_ALLOWED_PACKET" "256M" }}
+max_connections = {{ getenv "MYSQL_MAX_CONNECTIONS" "100" }}
+net_read_timeout = {{ getenv "MYSQL_NET_READ_TIMEOUT" "90" }}
+net_write_timeout = {{ getenv "MYSQL_NET_WRITE_TIMEOUT" "90" }}
+transaction_isolation = {{ getenv "MYSQL_TRANSACTION_ISOLATION" "REPEATABLE-READ" }}
+wait_timeout = {{ getenv "MYSQL_WAIT_TIMEOUT" "420" }}
+{{- if getenv "MYSQL_INNODB_IO_CAPACITY" }}
+innodb_io_capacity = {{ getenv "MYSQL_INNODB_IO_CAPACITY" }}
+{{- end }}
+{{- if getenv "MYSQL_INNODB_REDO_LOG_CAPACITY" }}
+innodb_redo_log_capacity = {{ getenv "MYSQL_INNODB_REDO_LOG_CAPACITY" }}
+{{- end }}
+{{- if getenv "MYSQL_LOG_ERROR_VERBOSITY" }}
+log_error_verbosity = {{ getenv "MYSQL_LOG_ERROR_VERBOSITY" }}
+{{- end }}
+{{- if getenv "MYSQL_LONG_QUERY_TIME" }}
+long_query_time = {{ getenv "MYSQL_LONG_QUERY_TIME" }}
+{{- end }}
+{{- if getenv "MYSQL_LOWER_CASE_TABLE_NAMES" }}
+lower_case_table_names = {{ getenv "MYSQL_LOWER_CASE_TABLE_NAMES" }}
+{{- end }}
+{{- if getenv "MYSQL_PERFORMANCE_SCHEMA" }}
+performance_schema = {{ getenv "MYSQL_PERFORMANCE_SCHEMA" }}
+{{- end }}
+{{- if getenv "MYSQL_SLOW_QUERY_LOG" }}
+slow_query_log = {{ getenv "MYSQL_SLOW_QUERY_LOG" }}
+{{- end }}
+{{- if getenv "MYSQL_SQL_MODE" }}
+sql_mode = {{ getenv "MYSQL_SQL_MODE" }}
+{{- end }}

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+root_password="$1"
+host="$2"
+db="$3"
+filepath="$4"
+ignore_tables="$5"
+
+mysql-dump "${root_password}" "${host}" "${db}" "${ignore_tables}" > "${filepath}"
+stat --format='RESULT=%s' "${filepath}"

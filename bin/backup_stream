@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -eEuo pipefail
+
+root_password="$1"
+host="$2"
+db="$3"
+stream_path="$4"
+status_path="$5"
+ignore_tables="$6"
+
+write_status() {
+    exit_code=$?
+    status_tmp="${status_path}.tmp.$$"
+    printf '%s\n' "${exit_code}" > "${status_tmp}"
+    mv "${status_tmp}" "${status_path}"
+}
+trap write_status EXIT
+
+# Open the FIFO first so an uploader receives EOF even when dump preparation fails.
+exec 3> "${stream_path}"
+mysql-dump "${root_password}" "${host}" "${db}" "${ignore_tables}" >&3

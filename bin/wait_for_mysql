@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+root_password="$1"
+host="$2"
+max_try="$3"
+wait_seconds="$4"
+delay_seconds="$5"
+
+sleep "${delay_seconds}"
+
+for ((attempt = 1; attempt <= max_try; attempt++)); do
+    if MYSQL_PWD="${root_password}" mysqladmin \
+        --protocol=TCP --host="${host}" --user=root ping --silent >/dev/null 2>&1; then
+        echo "MySQL has started!"
+        exit 0
+    fi
+    echo "MySQL is starting..."
+    sleep "${wait_seconds}"
+done
+
+echo "MySQL is unreachable." >&2
+exit 1

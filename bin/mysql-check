@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# shellcheck source=mysql-common
+source /usr/local/bin/mysql-common
+
+root_password="$1"
+host="$2"
+db="$3"
+db_sql="$(mysql_sql_string "${db}")"
+
+mapfile -t tables < <(
+    MYSQL_PWD="${root_password}" mysql \
+        --protocol=TCP \
+        --host="${host}" \
+        --user=root \
+        --batch \
+        --skip-column-names \
+        --execute="SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = '${db_sql}' ORDER BY TABLE_NAME;"
+)
+
+if [[ "${#tables[@]}" -eq 0 ]]; then
+    echo "No tables found in ${db}"
+    exit 0
+fi
+
+for table in "${tables[@]}"; do
+    table_sql="$(mysql_sql_identifier "${table}")"
+    MYSQL_PWD="${root_password}" mysql \
+        --protocol=TCP \
+        --host="${host}" \
+        --user=root \
+        --database="${db}" \
+        --execute="CHECK TABLE \`${table_sql}\`;"
+done

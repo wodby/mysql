@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source_value="$1"
+destination="$2"
+
+if [[ -z "${source_value}" || -z "${destination}" ]]; then
+    echo "Source and destination are required" >&2
+    exit 1
+fi
+
+mkdir -p "${destination}"
+filename="$(basename "${source_value%%\?*}")"
+if [[ -z "${filename}" || "${filename}" == "/" || "${filename}" == "." ]]; then
+    filename=database.sql
+fi
+download="${destination}/${filename}"
+
+if [[ "${source_value}" =~ ^https?:// ]]; then
+    curl --fail --location --silent --show-error "${source_value}" --output "${download}"
+else
+    cp "${source_value}" "${download}"
+fi
+
+case "${download}" in
+    *.tar.gz|*.tgz)
+        tar --extract --gzip --file "${download}" --directory "${destination}" \
+            --no-same-owner --exclude='*/__MACOSX/*' --exclude='*/._*'
+        rm "${download}"
+        ;;
+    *.zip)
+        unzip -qq "${download}" -x '__MACOSX/*' '*/._*' -d "${destination}"
+        rm "${download}"
+        ;;
+    *.gz)
+        uncompressed="${download%.gz}"
+        gzip --decompress --stdout "${download}" > "${uncompressed}"
+        rm "${download}"
+        ;;
+    *.sql|*.mysql)
+        ;;
+    *)
+        echo "Unsupported import format: ${filename}" >&2
+        exit 1
+        ;;
+esac

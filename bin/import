@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ -n "${DEBUG:-}" ]]; then
+    set -x
+fi
+
+# shellcheck source=mysql-common
+source /usr/local/bin/mysql-common
+
+user="$1"
+root_password="$2"
+host="$3"
+db="$4"
+source_value="$5"
+tmp_dir="$(mktemp -d /tmp/mysql-import.XXXXXX)"
+cleanup() {
+    rm -rf "${tmp_dir}"
+}
+trap cleanup EXIT
+
+get_archive "${source_value}" "${tmp_dir}"
+
+mapfile -d '' sql_files < <(
+    find "${tmp_dir}" -type f \
+        \( -name '*.sql' -o -name '*.mysql' \) \
+        ! -name '._*' \
+        ! -path '*/__MACOSX/*' \
+        -print0
+)
+
+if [[ "${#sql_files[@]}" -ne 1 ]]; then
+    echo "Expected exactly one .sql or .mysql import file; found ${#sql_files[@]}" >&2
+    exit 1
+fi
+
+db_sql="$(mysql_sql_identifier "${db}")"
+user_sql="$(mysql_sql_string "${user}")"
+mysql_root_query "${host}" "${root_password}" "DROP DATABASE IF EXISTS \`${db_sql}\`;"
+mysql_root_query "${host}" "${root_password}" "CREATE DATABASE \`${db_sql}\`;"
+mysql_root_query "${host}" "${root_password}" \
+    "GRANT ALL PRIVILEGES ON \`${db_sql}\`.* TO '${user_sql}'@'%';"
+
+MYSQL_PWD="${root_password}" mysql \
+    --protocol=TCP \
+    --host="${host}" \
+    --user=root \
+    "${db}" < "${sql_files[0]}"
