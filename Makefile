@@ -50,7 +50,7 @@ buildx-imagetools-create:
 		$(REPO):$(MYSQL_VER_MINOR)-arm64
 
 test:
-	cd ./tests && IMAGE=$(REPO):$(TAG) NAME=$(NAME) ./run.sh
+	cd ./tests && IMAGE=$(REPO):$(TAG) NAME=$(NAME) MYSQL_VER=$(MYSQL_VER) ./run.sh
 
 push:
 	docker push $(REPO):$(TAG)
