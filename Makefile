@@ -1,6 +1,6 @@
 -include env_make
 
-MYSQL_VER ?= 8.0.44
+MYSQL_VER ?= 8.0.46
 MYSQL_VER_MINOR = $(shell echo "$(MYSQL_VER)" | grep -oE '^[0-9]+\.[0-9]+')
 
 GOTPL_VERSION ?= 0.6.8
