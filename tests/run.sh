@@ -8,6 +8,7 @@ fi
 
 IMAGE="${IMAGE:-wodby/mysql:8.0}"
 NAME="${NAME:-mysql-8.0}"
+MYSQL_VER="${MYSQL_VER:?MYSQL_VER must be set}"
 test_id="$$"
 server_name="${NAME}-test-${test_id}"
 data_volume="${server_name}-data"
@@ -64,7 +65,11 @@ mysql_image() {
 mysql_image make check-ready max_try=30 wait_seconds=2
 [ "$(mysql_image make query-silent query='SELECT COUNT(*) FROM init_archive_test')" = '1' ]
 [ "$(mysql_image make query-silent user=root password="${MYSQL_ROOT_PASSWORD}" db=mysql query='SELECT @@max_connections')" = '73' ]
-[[ "$(mysql_image make query-silent user=root password="${MYSQL_ROOT_PASSWORD}" db=mysql query='SELECT VERSION()')" == 8.0.44* ]]
+actual_mysql_version="$(mysql_image make query-silent user=root password="${MYSQL_ROOT_PASSWORD}" db=mysql query='SELECT VERSION()')"
+if [[ "${actual_mysql_version}" != "${MYSQL_VER}"* ]]; then
+    echo "Unexpected MySQL version: got ${actual_mysql_version}, want ${MYSQL_VER}" >&2
+    exit 1
+fi
 
 mysql_image make create-db name=lifecycle charset=utf8mb4 collation=utf8mb4_0900_ai_ci
 mysql_image make create-user username=lifecycle_user password=lifecycle-password
