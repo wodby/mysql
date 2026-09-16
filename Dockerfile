@@ -1,18 +1,28 @@
 ARG MYSQL_VER=8.0.44
 
-# Rebuild the upstream gosu source with a patched Go standard library.
-FROM --platform=$BUILDPLATFORM golang:1.26.8-alpine3.23 AS gosu-build
+# Rebuild the latest gosu release with the current Go Alpine builder.
+FROM --platform=$BUILDPLATFORM golang:alpine AS gosu-build
 
 ARG TARGETOS
 ARG TARGETARCH
-ARG GOSU_COMMIT=6456aaa0f3c854d199d0f037f068eb97515b7513
 
+RUN apk add --no-cache git curl
+
+# Make refreshes release discovery even when the builder image is unchanged.
+ARG GOSU_REFRESH=manual
 RUN set -eux; \
-    apk add --no-cache git; \
+    echo "Refreshing gosu: ${GOSU_REFRESH}"; \
+    release_url=$(curl --fail --silent --show-error --location --output /dev/null \
+        --write-out '%{url_effective}' https://github.com/tianon/gosu/releases/latest); \
+    case "${release_url}" in \
+        https://github.com/tianon/gosu/releases/tag/*) ;; \
+        *) echo "Unexpected gosu release URL: ${release_url}" >&2; exit 1 ;; \
+    esac; \
+    gosu_version="${release_url##*/}"; \
+    test -n "${gosu_version}"; \
     git init /src; \
-    git -C /src fetch --depth 1 https://github.com/tianon/gosu.git "${GOSU_COMMIT}"; \
-    git -C /src checkout FETCH_HEAD; \
-    test "$(git -C /src rev-parse HEAD)" = "${GOSU_COMMIT}"
+    git -C /src fetch --depth 1 https://github.com/tianon/gosu.git "refs/tags/${gosu_version}"; \
+    git -C /src checkout FETCH_HEAD
 
 WORKDIR /src
 RUN set -eux; \
