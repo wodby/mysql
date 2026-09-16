@@ -4,9 +4,6 @@ FROM mysql:${MYSQL_VER}
 
 ARG MYSQL_VER
 ARG TARGETARCH
-ARG GOTPL_VERSION=0.6.8
-ARG GOTPL_SHA256_AMD64=369b8f484b13c532dd7729ecd467accd7f57431074fe60e6ba902edec168c7ac
-ARG GOTPL_SHA256_ARM64=51ad91b90a598262f23b6ed3f48c5b3adbad0a2f3ac543db277bebe4148567fb
 
 ENV MYSQL_VER="${MYSQL_VER}" \
     WODBY_MYSQL_CONFIG_FILE=/etc/mysql/conf.d/zz-wodby.cnf
@@ -21,10 +18,17 @@ USER root
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3041
 RUN set -eux; \
+    microdnf remove -y mysql-shell; \
     # Upgrade OS packages while retaining the MySQL version selected by the base image.
     microdnf --disablerepo='mysql*' upgrade -y; \
     microdnf install -y make unzip; \
     microdnf clean all; \
+    mkdir -p /wodby/import
+
+# Refresh the latest release on each Make build without rebuilding OS packages.
+ARG GOTPL_REFRESH
+RUN set -eux; \
+    echo "Refreshing gotpl: ${GOTPL_REFRESH}"; \
     arch="${TARGETARCH:-}"; \
     if [ -z "${arch}" ]; then \
         case "$(uname -m)" in \
@@ -34,18 +38,15 @@ RUN set -eux; \
         esac; \
     fi; \
     case "${arch}" in \
-        amd64) gotpl_sha256="${GOTPL_SHA256_AMD64}" ;; \
-        arm64) gotpl_sha256="${GOTPL_SHA256_ARM64}" ;; \
+        amd64|arm64) ;; \
         *) echo "Unsupported architecture: ${arch}" >&2; exit 1 ;; \
     esac; \
     gotpl_archive=/tmp/gotpl.tar.gz; \
     curl --fail --location --silent --show-error \
-        "https://github.com/wodby/gotpl/releases/download/${GOTPL_VERSION}/gotpl-linux-${arch}.tar.gz" \
+        "https://github.com/wodby/gotpl/releases/latest/download/gotpl-linux-${arch}.tar.gz" \
         --output "${gotpl_archive}"; \
-    echo "${gotpl_sha256}  ${gotpl_archive}" | sha256sum --check -; \
     tar --extract --gzip --file "${gotpl_archive}" --directory /usr/local/bin; \
-    rm "${gotpl_archive}"; \
-    mkdir -p /wodby/import
+    rm "${gotpl_archive}"
 
 COPY templates /etc/gotpl/
 COPY bin /usr/local/bin/

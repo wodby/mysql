@@ -3,10 +3,6 @@
 MYSQL_VER ?= 8.0.46
 MYSQL_VER_MINOR = $(shell echo "$(MYSQL_VER)" | grep -oE '^[0-9]+\.[0-9]+')
 
-GOTPL_VERSION ?= 0.6.8
-GOTPL_SHA256_AMD64 ?= 369b8f484b13c532dd7729ecd467accd7f57431074fe60e6ba902edec168c7ac
-GOTPL_SHA256_ARM64 ?= 51ad91b90a598262f23b6ed3f48c5b3adbad0a2f3ac543db277bebe4148567fb
-
 TAG ?= $(MYSQL_VER_MINOR)
 REPO = wodby/mysql
 NAME = mysql-$(MYSQL_VER_MINOR)
@@ -23,25 +19,19 @@ default: build
 build:
 	docker build -t $(REPO):$(TAG) \
 		--build-arg MYSQL_VER=$(MYSQL_VER) \
-		--build-arg GOTPL_VERSION=$(GOTPL_VERSION) \
-		--build-arg GOTPL_SHA256_AMD64=$(GOTPL_SHA256_AMD64) \
-		--build-arg GOTPL_SHA256_ARM64=$(GOTPL_SHA256_ARM64) \
+		--build-arg GOTPL_REFRESH=$$(date +%s) \
 		./
 
 buildx-build:
 	docker buildx build --platform $(PLATFORM) --load -t $(REPO):$(TAG) \
 		--build-arg MYSQL_VER=$(MYSQL_VER) \
-		--build-arg GOTPL_VERSION=$(GOTPL_VERSION) \
-		--build-arg GOTPL_SHA256_AMD64=$(GOTPL_SHA256_AMD64) \
-		--build-arg GOTPL_SHA256_ARM64=$(GOTPL_SHA256_ARM64) \
+		--build-arg GOTPL_REFRESH=$$(date +%s) \
 		./
 
 buildx-push:
 	docker buildx build --platform $(PLATFORM) --push -t $(REPO):$(TAG) \
 		--build-arg MYSQL_VER=$(MYSQL_VER) \
-		--build-arg GOTPL_VERSION=$(GOTPL_VERSION) \
-		--build-arg GOTPL_SHA256_AMD64=$(GOTPL_SHA256_AMD64) \
-		--build-arg GOTPL_SHA256_ARM64=$(GOTPL_SHA256_ARM64) \
+		--build-arg GOTPL_REFRESH=$$(date +%s) \
 		./
 
 buildx-imagetools-create:

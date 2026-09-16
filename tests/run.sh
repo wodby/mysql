@@ -9,6 +9,15 @@ fi
 IMAGE="${IMAGE:-wodby/mysql:8.0}"
 NAME="${NAME:-mysql-8.0}"
 MYSQL_VER="${MYSQL_VER:?MYSQL_VER must be set}"
+# MySQL Shell is not used by the image and brings its own Python dependencies.
+docker run --rm --entrypoint /bin/sh "${IMAGE}" -ec '
+    if rpm -q mysql-shell; then
+        echo "mysql-shell must not be installed" >&2
+        exit 1
+    fi
+    test ! -d /usr/lib/mysqlsh
+'
+
 test_id="$$"
 server_name="${NAME}-test-${test_id}"
 data_volume="${server_name}-data"
