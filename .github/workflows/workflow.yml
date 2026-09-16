@@ -17,6 +17,7 @@ env:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         arch:
         - amd64
@@ -35,15 +36,27 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
     - name: Build and test
+      id: build-image
       env:
         ARCH: ${{ matrix.arch }}
         MYSQL_VER: ${{ env.MYSQL80 }}
       run: |
         make
         make test
-        if [[ "${GITHUB_EVENT_NAME}" != pull_request ]]; then
-          make push
-        fi
+        echo "image=$(make --no-print-directory -s image-ref)" >> "$GITHUB_OUTPUT"
+    - name: Scan image
+      if: github.event_name == 'push'
+      uses: ./.github/actions/scout
+      with:
+        image: local://${{ steps.build-image.outputs.image }}
+        dockerhub-user: ${{ secrets.DOCKER_USERNAME }}
+        dockerhub-password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Push scanned architecture image
+      if: github.event_name == 'push'
+      env:
+        ARCH: ${{ matrix.arch }}
+        MYSQL_VER: ${{ env.MYSQL80 }}
+      run: make push
 
   publish:
     if: github.event_name != 'pull_request'
