@@ -1,5 +1,26 @@
 ARG MYSQL_VER=8.0.44
 
+# Rebuild the upstream gosu source with a patched Go standard library.
+FROM --platform=$BUILDPLATFORM golang:1.26.8-alpine3.23 AS gosu-build
+
+ARG TARGETOS
+ARG TARGETARCH
+ARG GOSU_COMMIT=6456aaa0f3c854d199d0f037f068eb97515b7513
+
+RUN set -eux; \
+    apk add --no-cache git; \
+    git init /src; \
+    git -C /src fetch --depth 1 https://github.com/tianon/gosu.git "${GOSU_COMMIT}"; \
+    git -C /src checkout FETCH_HEAD; \
+    test "$(git -C /src rev-parse HEAD)" = "${GOSU_COMMIT}"
+
+WORKDIR /src
+RUN set -eux; \
+    go mod download; \
+    go mod verify; \
+    CGO_ENABLED=0 GOOS="${TARGETOS:-linux}" GOARCH="${TARGETARCH}" \
+        go build -trimpath -o /out/gosu .
+
 FROM mysql:${MYSQL_VER}
 
 ARG MYSQL_VER
@@ -24,6 +45,7 @@ RUN set -eux; \
     microdnf --disablerepo='mysql*' upgrade -y; \
     microdnf install -y make unzip; \
     microdnf clean all; \
+    rm /usr/local/bin/gosu; \
     mkdir -p /wodby/import
 
 # Refresh the latest release on each Make build without rebuilding OS packages.
@@ -48,6 +70,9 @@ RUN set -eux; \
         --output "${gotpl_archive}"; \
     tar --extract --gzip --file "${gotpl_archive}" --directory /usr/local/bin; \
     rm "${gotpl_archive}"
+
+# The earlier removal records a whiteout for the inherited vulnerable binary.
+COPY --from=gosu-build /out/gosu /usr/local/bin/gosu
 
 COPY templates /etc/gotpl/
 COPY bin /usr/local/bin/

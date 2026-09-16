@@ -18,6 +18,13 @@ docker run --rm --entrypoint /bin/sh "${IMAGE}" -ec '
     test ! -d /usr/lib/mysqlsh
 '
 
+# The rebuilt helper must retain the upstream user/group switching behavior.
+docker run --rm --entrypoint /bin/sh "${IMAGE}" -ec '
+    gosu --version | grep -F "1.19 (go1.26.8 "
+    test "$(gosu mysql id -u)" = "$(id -u mysql)"
+    test "$(gosu mysql id -g)" = "$(id -g mysql)"
+'
+
 test_id="$$"
 server_name="${NAME}-test-${test_id}"
 data_volume="${server_name}-data"
