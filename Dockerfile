@@ -21,6 +21,8 @@ USER root
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3041
 RUN set -eux; \
+    # Upgrade OS packages while retaining the MySQL version selected by the base image.
+    microdnf --disablerepo='mysql*' upgrade -y; \
     microdnf install -y make unzip; \
     microdnf clean all; \
     arch="${TARGETARCH:-}"; \
