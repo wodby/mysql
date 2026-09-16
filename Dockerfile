@@ -26,7 +26,7 @@ RUN set -eux; \
     mkdir -p /wodby/import
 
 # Refresh the latest release on each Make build without rebuilding OS packages.
-ARG GOTPL_REFRESH
+ARG GOTPL_REFRESH=manual
 RUN set -eux; \
     echo "Refreshing gotpl: ${GOTPL_REFRESH}"; \
     arch="${TARGETARCH:-}"; \
