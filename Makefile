@@ -17,21 +17,24 @@ endif
 default: build
 
 build:
-	docker build -t $(REPO):$(TAG) \
+	docker build --pull -t $(REPO):$(TAG) \
 		--build-arg MYSQL_VER=$(MYSQL_VER) \
 		--build-arg GOTPL_REFRESH=$$(date +%s) \
+		--build-arg GOSU_REFRESH=$$(date +%s) \
 		./
 
 buildx-build:
-	docker buildx build --platform $(PLATFORM) --load -t $(REPO):$(TAG) \
+	docker buildx build --pull --platform $(PLATFORM) --load -t $(REPO):$(TAG) \
 		--build-arg MYSQL_VER=$(MYSQL_VER) \
 		--build-arg GOTPL_REFRESH=$$(date +%s) \
+		--build-arg GOSU_REFRESH=$$(date +%s) \
 		./
 
 buildx-push:
-	docker buildx build --platform $(PLATFORM) --push -t $(REPO):$(TAG) \
+	docker buildx build --pull --platform $(PLATFORM) --push -t $(REPO):$(TAG) \
 		--build-arg MYSQL_VER=$(MYSQL_VER) \
 		--build-arg GOTPL_REFRESH=$$(date +%s) \
+		--build-arg GOSU_REFRESH=$$(date +%s) \
 		./
 
 buildx-imagetools-create:

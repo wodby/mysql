@@ -1,5 +1,36 @@
 ARG MYSQL_VER=8.0.44
 
+# Rebuild the latest gosu release with the current Go Alpine builder.
+FROM --platform=$BUILDPLATFORM golang:alpine AS gosu-build
+
+ARG TARGETOS
+ARG TARGETARCH
+
+RUN apk add --no-cache git curl
+
+# Make refreshes release discovery even when the builder image is unchanged.
+ARG GOSU_REFRESH=manual
+RUN set -eux; \
+    echo "Refreshing gosu: ${GOSU_REFRESH}"; \
+    release_url=$(curl --fail --silent --show-error --location --output /dev/null \
+        --write-out '%{url_effective}' https://github.com/tianon/gosu/releases/latest); \
+    case "${release_url}" in \
+        https://github.com/tianon/gosu/releases/tag/*) ;; \
+        *) echo "Unexpected gosu release URL: ${release_url}" >&2; exit 1 ;; \
+    esac; \
+    gosu_version="${release_url##*/}"; \
+    test -n "${gosu_version}"; \
+    git init /src; \
+    git -C /src fetch --depth 1 https://github.com/tianon/gosu.git "refs/tags/${gosu_version}"; \
+    git -C /src checkout FETCH_HEAD
+
+WORKDIR /src
+RUN set -eux; \
+    go mod download; \
+    go mod verify; \
+    CGO_ENABLED=0 GOOS="${TARGETOS:-linux}" GOARCH="${TARGETARCH}" \
+        go build -trimpath -o /out/gosu .
+
 FROM mysql:${MYSQL_VER}
 
 ARG MYSQL_VER
@@ -24,6 +55,7 @@ RUN set -eux; \
     microdnf --disablerepo='mysql*' upgrade -y; \
     microdnf install -y make unzip; \
     microdnf clean all; \
+    rm /usr/local/bin/gosu; \
     mkdir -p /wodby/import
 
 # Refresh the latest release on each Make build without rebuilding OS packages.
@@ -48,6 +80,9 @@ RUN set -eux; \
         --output "${gotpl_archive}"; \
     tar --extract --gzip --file "${gotpl_archive}" --directory /usr/local/bin; \
     rm "${gotpl_archive}"
+
+# The earlier removal records a whiteout for the inherited vulnerable binary.
+COPY --from=gosu-build /out/gosu /usr/local/bin/gosu
 
 COPY templates /etc/gotpl/
 COPY bin /usr/local/bin/
