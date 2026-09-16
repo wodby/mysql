@@ -1,0 +1,23 @@
+# Oracle publishes separate normal and FIPS package streams. These exact normal
+# builds already include the fixes; Grype incorrectly compares them with epoch-10
+# FIPS builds. Do not extend these exceptions to other versions without review.
+ignore:
+  # Normal stream fixed in 1:3.5.1-7.0.1.el9_7:
+  # https://linux.oracle.com/errata/ELSA-2026-1473.html
+  - vulnerability: CVE-2025-11187
+    package:
+      name: openssl
+      version: 1:3.5.8-1.0.1.el9_8
+      type: rpm
+  - vulnerability: CVE-2025-11187
+    package:
+      name: openssl-libs
+      version: 1:3.5.8-1.0.1.el9_8
+      type: rpm
+  # Normal stream fixed in 3.8.10-4.el9_8:
+  # https://linux.oracle.com/errata/ELSA-2026-20612.html
+  - vulnerability: CVE-2026-33845
+    package:
+      name: gnutls
+      version: 3.8.10-8.el9_8
+      type: rpm
