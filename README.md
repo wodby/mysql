@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/wodby/mysql/actions/workflows/workflow.yml/badge.svg)](https://github.com/wodby/mysql/actions/workflows/workflow.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/wodby/mysql.svg)](https://hub.docker.com/r/wodby/mysql)
 
-MySQL Community Server with Wodby configuration and database operations.
+MySQL 8.4 LTS Community Server with Wodby configuration and database operations.
 
 ## Docker images
 
@@ -15,13 +15,17 @@ Images are built for `linux/amd64` and `linux/arm64`.
 
 | Tag | Description |
 | --- | --- |
-| `8.0` | Latest Wodby build of the supported MySQL 8.0 patch release |
+| `8.4` | Latest Wodby build of the supported MySQL 8.4 LTS patch release |
 | `8` | Latest Wodby MySQL 8 build |
 | `latest` | Latest supported Wodby MySQL build |
-| `8.0-X.Y.Z` | Immutable Wodby stability release |
+| `8.4-X.Y.Z` | Immutable Wodby stability release |
 | `8-X.Y.Z` | Major-version alias for the same stability release |
 
 Use stability tags for production deployments.
+
+Only MySQL 8.4 is built and maintained. The floating `8` and `latest` aliases now
+select 8.4. Before upgrading an existing 8.0 data volume, back it up and follow
+the [MySQL 8.4 upgrade requirements](https://dev.mysql.com/doc/refman/8.4/en/upgrade-prerequisites.html).
 
 ## Configuration
 
@@ -84,7 +88,7 @@ Example:
 docker run --rm \
   --link mysql:mysql \
   -e MYSQL_ROOT_PASSWORD=password \
-  wodby/mysql:8.0 \
+  wodby/mysql:8.4 \
   make check-ready host=mysql max_try=30 wait_seconds=2
 ```
 

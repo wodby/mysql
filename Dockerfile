@@ -1,4 +1,4 @@
-ARG MYSQL_VER=8.0.44
+ARG MYSQL_VER=8.4.11
 
 # Rebuild the latest gosu release with the current Go Alpine builder.
 FROM --platform=$BUILDPLATFORM golang:alpine AS gosu-build
