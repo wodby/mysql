@@ -43,6 +43,7 @@ jobs:
       run: |
         make
         make test
+        IMAGE="$(make --no-print-directory -s image-ref)" bash ./tests/ghost.sh
         echo "image=$(make --no-print-directory -s image-ref)" >> "$GITHUB_OUTPUT"
     - name: Scan image
       uses: ./.github/actions/grype
