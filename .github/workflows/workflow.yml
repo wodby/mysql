@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 env:
-  MYSQL80: '8.0.46'
+  MYSQL84: '8.4.11'
 
 jobs:
   build:
@@ -39,7 +39,7 @@ jobs:
       id: build-image
       env:
         ARCH: ${{ matrix.arch }}
-        MYSQL_VER: ${{ env.MYSQL80 }}
+        MYSQL_VER: ${{ env.MYSQL84 }}
       run: |
         make
         make test
@@ -52,7 +52,7 @@ jobs:
       if: github.event_name == 'push'
       env:
         ARCH: ${{ matrix.arch }}
-        MYSQL_VER: ${{ env.MYSQL80 }}
+        MYSQL_VER: ${{ env.MYSQL84 }}
       run: make push
 
   publish:
@@ -68,6 +68,6 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
     - uses: ./.github/actions
       with:
-        version: ${{ env.MYSQL80 }}
+        version: ${{ env.MYSQL84 }}
         latest: 'true'
         latest_major: 'true'

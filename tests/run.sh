@@ -6,8 +6,8 @@ if [[ -n "${DEBUG:-}" ]]; then
     set -x
 fi
 
-IMAGE="${IMAGE:-wodby/mysql:8.0}"
-NAME="${NAME:-mysql-8.0}"
+IMAGE="${IMAGE:-wodby/mysql:8.4}"
+NAME="${NAME:-mysql-8.4}"
 MYSQL_VER="${MYSQL_VER:?MYSQL_VER must be set}"
 # MySQL Shell is not used by the image and brings its own Python dependencies.
 docker run --rm --entrypoint /bin/sh "${IMAGE}" -ec '
