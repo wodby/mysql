@@ -14,24 +14,28 @@ endif
 
 .PHONY: build buildx-build buildx-push buildx-imagetools-create test push shell run start stop logs clean release
 
+# Resolve the same pinned base image for every local and CI build target.
+include base-images.mk
+BASE_IMAGE_TAG = $(MYSQL_VER)
+
 default: build
 
 build:
-	docker build --pull -t $(REPO):$(TAG) \
+	docker build --build-arg BASE_IMAGE="$(BASE_IMAGE)" --build-arg BUILD_IMAGE_GOSU="$(BUILD_IMAGE_GOSU)" --pull -t $(REPO):$(TAG) \
 		--build-arg MYSQL_VER=$(MYSQL_VER) \
 		--build-arg GOTPL_REFRESH=$$(date +%s) \
 		--build-arg GOSU_REFRESH=$$(date +%s) \
 		./
 
 buildx-build:
-	docker buildx build --pull --platform $(PLATFORM) --load -t $(REPO):$(TAG) \
+	docker buildx build --build-arg BASE_IMAGE="$(BASE_IMAGE)" --build-arg BUILD_IMAGE_GOSU="$(BUILD_IMAGE_GOSU)" --pull --platform $(PLATFORM) --load -t $(REPO):$(TAG) \
 		--build-arg MYSQL_VER=$(MYSQL_VER) \
 		--build-arg GOTPL_REFRESH=$$(date +%s) \
 		--build-arg GOSU_REFRESH=$$(date +%s) \
 		./
 
 buildx-push:
-	docker buildx build --pull --platform $(PLATFORM) --push -t $(REPO):$(TAG) \
+	docker buildx build --build-arg BASE_IMAGE="$(BASE_IMAGE)" --build-arg BUILD_IMAGE_GOSU="$(BUILD_IMAGE_GOSU)" --pull --platform $(PLATFORM) --push -t $(REPO):$(TAG) \
 		--build-arg MYSQL_VER=$(MYSQL_VER) \
 		--build-arg GOTPL_REFRESH=$$(date +%s) \
 		--build-arg GOSU_REFRESH=$$(date +%s) \

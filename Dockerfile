@@ -1,7 +1,12 @@
+# check=skip=InvalidDefaultArgInFrom
+
+# The Makefile supplies the required digest-pinned BASE_IMAGE argument.
 ARG MYSQL_VER=8.4.11
 
 # Rebuild the latest gosu release with the current Go Alpine builder.
-FROM --platform=$BUILDPLATFORM golang:alpine AS gosu-build
+ARG BASE_IMAGE
+ARG BUILD_IMAGE_GOSU
+FROM --platform=$BUILDPLATFORM ${BUILD_IMAGE_GOSU} AS gosu-build
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -31,7 +36,7 @@ RUN set -eux; \
     CGO_ENABLED=0 GOOS="${TARGETOS:-linux}" GOARCH="${TARGETARCH}" \
         go build -trimpath -o /out/gosu .
 
-FROM mysql:${MYSQL_VER}
+FROM ${BASE_IMAGE}
 
 ARG MYSQL_VER
 ARG TARGETARCH
