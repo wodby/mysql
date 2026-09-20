@@ -101,3 +101,13 @@ make test
 
 The wrapper code is licensed under GPL-2.0. MySQL Community Server and bundled
 dependencies retain their respective upstream licenses.
+
+## Building with pinned base images
+
+Build with the Makefile to use the base image digests in `base-images.mk`. Local
+builds and CI resolve the same version and variant to the same multi-platform
+image. A version without a pin fails before the build starts.
+
+When adding a supported base version or variant, add its image index digest to
+`base-images.mk`. For a custom build, override `BASE_IMAGE` with a complete
+`repository:tag@sha256:...` reference.
