@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# Version aliases identify published releases; only primary tags publish images.
+if [[ "${GITHUB_REF:-}" =~ ^refs/tags/.+-r[0-9]+$ ]]; then
+    exit 0
+fi
+
 set -euo pipefail
 
 if [[ "${GITHUB_REF}" != refs/heads/main && "${GITHUB_REF}" != refs/tags/* ]]; then
@@ -15,10 +20,10 @@ if [[ -n "${LATEST_MAJOR:-}" ]]; then
 fi
 
 if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-    stability_tag="${GITHUB_REF##*/}"
-    tags=("${minor_ver}-${stability_tag}")
+    image_revision="${GITHUB_REF##*/}"
+    tags=("${minor_ver}-${image_revision}")
     if [[ -n "${LATEST_MAJOR:-}" ]]; then
-        tags+=("${major_ver}-${stability_tag}")
+        tags+=("${major_ver}-${image_revision}")
     fi
 elif [[ -n "${LATEST:-}" ]]; then
     tags+=(latest)

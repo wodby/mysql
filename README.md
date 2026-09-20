@@ -5,6 +5,16 @@
 
 MySQL 8.4 LTS Community Server with Wodby configuration and database operations.
 
+## Image revisions
+
+Use image revision tags such as `wodby/mysql:8.4-rN` to select a Wodby image revision.
+Major and minor tags use the repository release number, starting at `r0`. Full-version tags such as
+`wodby/mysql:8.4.11-r0` start at `r0` for each exact upstream version.
+Every published versioned revision tag has a matching annotated Git tag pointing to its release commit.
+Existing tags remain available after support for their major or minor version ends.
+See [release tags](https://github.com/wodby/mysql/tags) for available revisions and the [image revision policy](https://github.com/wodby/images#image-revisions) for upgrade guidance.
+Previously published image tags remain available.
+
 ## Docker images
 
 The image extends the Docker Official Image for MySQL instead of rebuilding the
@@ -18,10 +28,10 @@ Images are built for `linux/amd64` and `linux/arm64`.
 | `8.4` | Latest Wodby build of the supported MySQL 8.4 LTS patch release |
 | `8` | Latest Wodby MySQL 8 build |
 | `latest` | Latest supported Wodby MySQL build |
-| `8.4-X.Y.Z` | Immutable Wodby stability release |
-| `8-X.Y.Z` | Major-version alias for the same stability release |
+| `8.4-rN` | Immutable Wodby image revision |
+| `8-rN` | Major-version alias for the same image revision |
 
-Use stability tags for production deployments.
+Use image revision tags for production deployments.
 
 Only MySQL 8.4 is built and maintained. The floating `8` and `latest` aliases now
 select 8.4. Before upgrading an existing 8.0 data volume, back it up and follow
