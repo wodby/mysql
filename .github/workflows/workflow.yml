@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 env:
-  MYSQL84: '8.4.11'
+  MYSQL84: '8.4.13'
 
 jobs:
   build:
