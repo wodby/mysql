@@ -17,6 +17,18 @@ ignore:
       name: openssl-libs
       version: 1:3.5.8-2.0.1.el9_8
       type: rpm
+  # Normal stream fixed in 1:3.5.8-2.0.1.el9_8:
+  # https://linux.oracle.com/errata/ELSA-2026-77396.html
+  - vulnerability: CVE-2026-84782
+    package:
+      name: openssl
+      version: 1:3.5.8-2.0.1.el9_8
+      type: rpm
+  - vulnerability: CVE-2026-84782
+    package:
+      name: openssl-libs
+      version: 1:3.5.8-2.0.1.el9_8
+      type: rpm
   # Normal stream fixed in 3.8.10-4.el9_8:
   # https://linux.oracle.com/errata/ELSA-2026-20612.html
   - vulnerability: CVE-2026-33845
