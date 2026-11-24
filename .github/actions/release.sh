@@ -11,8 +11,10 @@ if [[ "${GITHUB_REF}" != refs/heads/main && "${GITHUB_REF}" != refs/tags/* ]]; t
     exit 0
 fi
 
-minor_ver="${MYSQL_VER%.*}"
-major_ver="${minor_ver%.*}"
+# Take X.Y and X from the front: upstream versions may have three or four
+# parts (8.4.13 or the package rebuild 8.4.13.1).
+minor_ver="$(echo "${MYSQL_VER}" | grep -oE '^[0-9]+\.[0-9]+')"
+major_ver="${minor_ver%%.*}"
 tags=("${minor_ver}")
 
 if [[ -n "${LATEST_MAJOR:-}" ]]; then
