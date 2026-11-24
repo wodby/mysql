@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  MYSQL84: '8.4.13'
+  MYSQL84: '8.4.13.1'
 
 jobs:
   build:

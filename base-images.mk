@@ -3,7 +3,7 @@
 BASE_IMAGE_REPOSITORY := mysql
 BASE_IMAGE_VERSION_SUFFIX :=
 
-BASE_IMAGE_DIGEST_8.4.13 := sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902
+BASE_IMAGE_DIGEST_8.4.13.1 := sha256:8c233bad33d520a7aae1c1e619c3a9775f4a1ba2d463d692fada04ec7f40be00
 
 # Build gosu from the same pinned Go image on both target architectures.
 BUILD_IMAGE_GOSU := golang:alpine@sha256:70bd7ddea8b6cbe5d6943cde279d6b67feb10cc924fb9100d1d8757c1575b280
