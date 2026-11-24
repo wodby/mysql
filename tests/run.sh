@@ -82,8 +82,11 @@ mysql_image make check-ready max_try=30 wait_seconds=2
 [ "$(mysql_image make query-silent query='SELECT COUNT(*) FROM init_archive_test')" = '1' ]
 [ "$(mysql_image make query-silent user=root password="${MYSQL_ROOT_PASSWORD}" db=mysql query='SELECT @@max_connections')" = '73' ]
 actual_mysql_version="$(mysql_image make query-silent user=root password="${MYSQL_ROOT_PASSWORD}" db=mysql query='SELECT VERSION()')"
-if [[ "${actual_mysql_version}" != "${MYSQL_VER}"* ]]; then
-    echo "Unexpected MySQL version: got ${actual_mysql_version}, want ${MYSQL_VER}" >&2
+# Oracle publishes package rebuilds such as 8.4.13.1; the server still reports
+# the three-part release, so compare only major.minor.patch.
+expected_mysql_version="$(echo "${MYSQL_VER}" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+')"
+if [[ "${actual_mysql_version}" != "${expected_mysql_version}" && "${actual_mysql_version}" != "${expected_mysql_version}-"* ]]; then
+    echo "Unexpected MySQL version: got ${actual_mysql_version}, want ${expected_mysql_version} (${MYSQL_VER})" >&2
     exit 1
 fi
 
